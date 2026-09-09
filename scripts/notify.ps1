@@ -35,15 +35,17 @@ $msg = $msg -replace '[\x00-\x1F]', ' '
 if ($msg.Length -gt 240) { $msg = $msg.Substring(0, 240) }
 $safe = $msg.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;')
 
-# Jump button: protocol buttons are platform-dispatched, so they work without a COM
-# toast activator (body click cannot activate for desktop senders on Win10/11).
-$proto = 'cursor'
-if ($env:CC_NOTIFY_PROTOCOL) { $proto = $env:CC_NOTIFY_PROTOCOL }
+# Jump button: default goes through our ccwinnotify:// handler, which force-activates
+# the IDE window (plain protocol jumps intermittently lose the foreground-lock race).
+# CC_NOTIFY_PROTOCOL overrides with a direct IDE protocol (cursor, vscode, ...).
 $launch = ''
 $launchAttr = ''
 $actionsXml = ''
 if ($obj -and $obj.cwd) {
-    $launch = ($proto + '://file/' + ($obj.cwd -replace '\\','/')).Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
+    $slashes = $obj.cwd -replace '\\','/'
+    $jump = 'ccwinnotify://' + $slashes
+    if ($env:CC_NOTIFY_PROTOCOL) { $jump = $env:CC_NOTIFY_PROTOCOL + '://file/' + $slashes }
+    $launch = $jump.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
     $launchAttr = ' launch="' + $launch + '"'
     $actionsXml = '  <actions><action activationType="protocol" arguments="' + $launch + '" content="Open project window"/></actions>'
 }
