@@ -1,7 +1,7 @@
 {
   "name": "claude-win-notify",
   "description": "Windows toast notifications for Claude Code: reply-completed, needs-attention and API-failure alerts, with one-click jump to your IDE project window. Zero dependencies (PowerShell + WinRT).",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "ZNing"
   }

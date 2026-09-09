@@ -42,6 +42,8 @@ Restart your Claude Code session — `Stop`/`StopFailure` hooks load at session 
 | `CC_NOTIFY_PROTOCOL` | unset = built-in force-foreground handler | direct IDE protocol for the jump button (`cursor`, `vscode`) as a fallback |
 | `CC_NOTIFY_TEXT_STOP` | `Claude finished - waiting for your input` | body for completion toasts |
 | `CC_NOTIFY_TEXT_STOPFAILURE` | `Claude turn failed (API/gateway error) - check terminal` | body for failure toasts |
+| `CC_NOTIFY_SOUND` | unset = default chime | system preset: `IM`, `Mail`, `Reminder`, `Looping.Alarm2`, ... or a full `ms-winsoundevent:` URI |
+| `CC_NOTIFY_SOUND_FILE` | unset | path to a custom `.wav`; toast audio is muted and the file plays instead |
 
 Set them in `settings.json` `env` (Unicode-safe, so non-English text works there).
 

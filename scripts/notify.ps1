@@ -35,6 +35,18 @@ $msg = $msg -replace '[\x00-\x1F]', ' '
 if ($msg.Length -gt 240) { $msg = $msg.Substring(0, 240) }
 $safe = $msg.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;')
 
+# Sound: CC_NOTIFY_SOUND picks a system preset (IM, Mail, Reminder, Looping.Alarm2, ...
+# or a full ms-winsoundevent: URI); CC_NOTIFY_SOUND_FILE plays a custom .wav instead
+# (toast audio muted to avoid double sound).
+$soundSrc = 'ms-winsoundevent:Notification.Default'
+if ($env:CC_NOTIFY_SOUND) {
+    $soundSrc = $env:CC_NOTIFY_SOUND
+    if ($soundSrc -notlike 'ms-winsoundevent:*') { $soundSrc = 'ms-winsoundevent:Notification.' + $soundSrc }
+}
+$audioXml = '<audio src="' + $soundSrc + '"/>'
+$playFile = $env:CC_NOTIFY_SOUND_FILE
+if ($playFile) { $audioXml = '<audio silent="true"/>' }
+
 # Jump button: default goes through our ccwinnotify:// handler, which force-activates
 # the IDE window (plain protocol jumps intermittently lose the foreground-lock race).
 # CC_NOTIFY_PROTOCOL overrides with a direct IDE protocol (cursor, vscode, ...).
@@ -63,7 +75,7 @@ try {
       <text>$safe</text>
     </binding>
   </visual>
-  <audio src="ms-winsoundevent:Notification.Default"/>
+  $audioXml
 $actionsXml
 </toast>
 "@
@@ -74,6 +86,12 @@ $actionsXml
     $toast.SuppressPopup = $false
     $toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(30)
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Claude Code').Show($toast)
+    if ($playFile) {
+        try {
+            $sp = New-Object System.Media.SoundPlayer $playFile
+            $sp.PlaySync()
+        } catch {}
+    }
     exit 0
 } catch {
     # Fallback: legacy tray balloon (keep alive while it shows; disposing kills it)
