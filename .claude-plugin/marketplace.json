@@ -1,0 +1,13 @@
+{
+  "name": "zning-plugins",
+  "owner": {
+    "name": "ZNing"
+  },
+  "plugins": [
+    {
+      "name": "claude-win-notify",
+      "source": "./",
+      "description": "Windows toast notifications for Claude Code with IDE jump button and API-failure alerts."
+    }
+  ]
+}

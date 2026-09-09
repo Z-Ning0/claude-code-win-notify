@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/notify.ps1\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/notify.ps1\" -Text \"Claude finished - waiting for your input\""
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/notify.ps1\" -Text \"Claude turn failed (API/gateway error) - check terminal\""
+          }
+        ]
+      }
+    ]
+  }
+}
