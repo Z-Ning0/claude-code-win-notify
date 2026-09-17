@@ -5,7 +5,7 @@ Windows toast notifications for [Claude Code](https://docs.claude.com/en/docs/cl
 - **Reply completed** (`Stop`) — know when a long task finished while you were away
 - **Needs attention** (`Notification`) — permission prompts and idle-waiting
 - **Turn died on an API/gateway error** (`StopFailure`) — 503s, SSE drops, bad-channel 400s: the terminal shows a red line and nothing else happens; now you get a toast with the error category
-- **One-click jump back** — an "Open project window" button routes through a bundled `ccwinnotify://` handler that force-activates the IDE window of the notifying session (Alt-trick + SetForegroundWindow), beating the intermittent Windows foreground-lock denial that makes plain `cursor://` jumps flash the taskbar instead; set `CC_NOTIFY_PROTOCOL` to fall back to a direct IDE protocol
+- **One-click jump back** — an "Open project window" button launches the IDE protocol (`cursor://file/<cwd>` by default, override with `CC_NOTIFY_PROTOCOL`). Reliable when the IDE window is minimized; when the IDE is visible but behind other windows, focus depends on the Windows foreground race and may intermittently only flash the taskbar (platform behavior, not fixable from a hook). `install.ps1` best-effort stamps a COM toast activator so body clicks can also activate on healthy systems.
 - **Multi-session safe** — every toast is prefixed with the project folder name from the hook's `cwd`
 - **Zero dependencies** — pure PowerShell + WinRT, no modules, no binaries
 
@@ -39,7 +39,7 @@ Restart your Claude Code session — `Stop`/`StopFailure` hooks load at session 
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `CC_NOTIFY_PROTOCOL` | unset = built-in force-foreground handler | direct IDE protocol for the jump button (`cursor`, `vscode`) as a fallback |
+| `CC_NOTIFY_PROTOCOL` | `cursor` | IDE protocol scheme for the jump button (`vscode`, ...) |
 | `CC_NOTIFY_TEXT_STOP` | `Claude finished - waiting for your input` | body for completion toasts |
 | `CC_NOTIFY_TEXT_STOPFAILURE` | `Claude turn failed (API/gateway error) - check terminal` | body for failure toasts |
 | `CC_NOTIFY_SOUND` | unset = default chime | system preset: `IM`, `Mail`, `Reminder`, `Looping.Alarm2`, ... or a full `ms-winsoundevent:` URI |
@@ -61,7 +61,7 @@ Windows 11 桌面 Toast 有四个坑，本插件已全部处理：
 - **No toast at all, Action Center empty** → run `install.ps1` (AUMID registration), check Windows Settings → System → Notifications is on and not in Do-Not-Disturb.
 - **Toast appears for a split second** → you are on the balloon fallback and something disposed it; report your Windows build.
 - **Jump button opens the wrong app** → set `CC_NOTIFY_PROTOCOL` to your IDE (`vscode`).
-- **Jump only flashes the taskbar** → foreground-lock denial; v1.1+ routes jumps through the bundled `ccwinnotify://` force-activation handler. Re-run `install.ps1` after updating to (re)register the protocol. If your IDE is not Cursor, set `CC_NOTIFY_PROTOCOL` instead.
+- **Jump only flashes the taskbar** → Windows foreground race when the IDE is visible but backgrounded; minimize-style restores always work. Nothing a hook can fix; alt-tab is the fallback.
 - **Hooks fire twice** → manual hooks still present in `settings.json`; remove them.
 
 ## Notes

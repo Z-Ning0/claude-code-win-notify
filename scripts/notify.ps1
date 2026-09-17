@@ -47,16 +47,18 @@ $audioXml = '<audio src="' + $soundSrc + '"/>'
 $playFile = $env:CC_NOTIFY_SOUND_FILE
 if ($playFile) { $audioXml = '<audio silent="true"/>' }
 
-# Jump button: default goes through our ccwinnotify:// handler, which force-activates
-# the IDE window (plain protocol jumps intermittently lose the foreground-lock race).
-# CC_NOTIFY_PROTOCOL overrides with a direct IDE protocol (cursor, vscode, ...).
+# Jump button: cursor:// protocol (dispatched by the toast platform; custom protocols
+# are silently dropped, file:// is blocked). Focus success depends on the Windows
+# foreground race inside Cursor itself - intermittent by platform design.
+# CC_NOTIFY_PROTOCOL overrides the scheme (e.g. vscode).
 $launch = ''
 $launchAttr = ''
 $actionsXml = ''
 if ($obj -and $obj.cwd) {
     $slashes = $obj.cwd -replace '\\','/'
-    $jump = 'ccwinnotify://' + $slashes
-    if ($env:CC_NOTIFY_PROTOCOL) { $jump = $env:CC_NOTIFY_PROTOCOL + '://file/' + $slashes }
+    $proto = 'cursor'
+    if ($env:CC_NOTIFY_PROTOCOL) { $proto = $env:CC_NOTIFY_PROTOCOL }
+    $jump = $proto + '://file/' + $slashes
     $launch = $jump.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
     $launchAttr = ' launch="' + $launch + '"'
     $actionsXml = '  <actions><action activationType="protocol" arguments="' + $launch + '" content="Open project window"/></actions>'
