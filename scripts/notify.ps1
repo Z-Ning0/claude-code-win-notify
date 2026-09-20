@@ -26,9 +26,19 @@ if (-not $msg) {
 if ($obj -and $obj.error) { $msg = $msg + ' [' + $obj.error + ']' }
 if (-not $msg) { $msg = 'Claude Code needs your attention' }
 
-# Prefix the project folder so parallel sessions are tellable apart
+# Prefix the project folder so parallel sessions are tellable apart.
+# Anchor to the git toplevel: the session cwd drifts when the agent cds into
+# subdirectories, and a subfolder URI makes Cursor swap the workspace window.
 $proj = $null
-if ($obj -and $obj.cwd) { try { $proj = Split-Path $obj.cwd -Leaf } catch {} }
+$root = $null
+if ($obj -and $obj.cwd) {
+    $root = $obj.cwd
+    try {
+        $g = git -C $obj.cwd rev-parse --show-toplevel 2>$null
+        if ($g) { $root = ("$g").Trim() }
+    } catch {}
+    try { $proj = Split-Path $root -Leaf } catch {}
+}
 if ($proj) { $msg = '[' + $proj + '] ' + $msg }
 # Control chars (tab/newline) mangle toast text
 $msg = $msg -replace '[\x00-\x1F]', ' '
@@ -55,7 +65,7 @@ $launch = ''
 $launchAttr = ''
 $actionsXml = ''
 if ($obj -and $obj.cwd) {
-    $slashes = $obj.cwd -replace '\\','/'
+    $slashes = $root -replace '\\','/'
     $proto = 'cursor'
     if ($env:CC_NOTIFY_PROTOCOL) { $proto = $env:CC_NOTIFY_PROTOCOL }
     $jump = $proto + '://file/' + $slashes
