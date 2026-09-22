@@ -27,14 +27,24 @@ if ($obj -and $obj.error) { $msg = $msg + ' [' + $obj.error + ']' }
 if (-not $msg) { $msg = 'Claude Code needs your attention' }
 
 # Prefix the project folder so parallel sessions are tellable apart.
-# Anchor to the git toplevel: the session cwd drifts when the agent cds into
-# subdirectories, and a subfolder URI makes Cursor swap the workspace window.
+# Anchor to the session-start cwd recorded in the transcript: the live cwd drifts
+# when the agent cds into subdirectories OR other repos, and a drifted URI makes
+# Cursor swap the workspace window. Git toplevel further normalizes subdirs.
 $proj = $null
 $root = $null
 if ($obj -and $obj.cwd) {
-    $root = $obj.cwd
+    $anchor = $obj.cwd
+    if ($obj.transcript_path) {
+        try {
+            foreach ($ln in (Get-Content -LiteralPath $obj.transcript_path -TotalCount 10 -Encoding UTF8)) {
+                $j = $ln | ConvertFrom-Json
+                if ($j -and $j.cwd) { $anchor = $j.cwd; break }
+            }
+        } catch {}
+    }
+    $root = $anchor
     try {
-        $g = git -C $obj.cwd rev-parse --show-toplevel 2>$null
+        $g = git -C $anchor rev-parse --show-toplevel 2>$null
         if ($g) { $root = ("$g").Trim() }
     } catch {}
     try { $proj = Split-Path $root -Leaf } catch {}
